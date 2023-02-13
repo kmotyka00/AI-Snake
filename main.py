@@ -4,45 +4,44 @@ from variables import *
 import time
 import random
 
+def generate_random_coordinate(frame_length):
+    return random.choice(range(0, frame_length, BLOCK_SIZE))
+
 class Apple:
-    def __init__(self, surface, apple_image='images/gem2.png'):
+    def __init__(self, surface):
         self.parent_screen = surface
-        self.image = pygame.image.load(apple_image).convert()
+        self.image = pygame.image.load(random.choice(APPLE_IMAGES)).convert()
         self.image = pygame.transform.scale(self.image, (BLOCK_SIZE, BLOCK_SIZE))
 
-        self.x = random.randint(0, 24-1) * BLOCK_SIZE
-        self.y = random.randint(0, 24 - 1) * BLOCK_SIZE
+        self.x = generate_random_coordinate(WINDOW_WIDTH)
+        self.y = generate_random_coordinate(WINDOW_HEIGHT)
 
     def draw(self):
-        #self.parent_screen.fill(BACKGROUND_COLOR)
         self.parent_screen.blit(self.image, (self.x, self.y))
         pygame.display.flip()
 
-    def change_image(self, img_lst=None):
-        if img_lst is None:
-            img_lst = ['images\gem.png', 'images\gem2.png']
-            img_lst = ['images\gem.png', 'images\gem2.png']
-        img = random.choice(img_lst)
+    def change_image(self):
+        img = random.choice(APPLE_IMAGES)
         self.image = pygame.image.load(img).convert()
         self.image = pygame.transform.scale(self.image, (BLOCK_SIZE, BLOCK_SIZE))
 
     def move(self, change_image=True):
         if change_image is True:
             self.change_image()
-        self.x = random.randint(0, 24-1) * BLOCK_SIZE
-        self.y = random.randint(0, 24-1) * BLOCK_SIZE
+        self.x = generate_random_coordinate(WINDOW_WIDTH)
+        self.y = generate_random_coordinate(WINDOW_HEIGHT)
 
 class Snake:
-    def __init__(self, surface, window_width, window_height, block_image="images/block.jpg", length=1):
+    def __init__(self, surface, block_image=DEFAULT_SNAKE_BLOCK_PATH, length=INIT_LENGTH):
         self.parent_screen = surface
         self.block = pygame.image.load(block_image).convert()
-        self.block = pygame.transform.scale(self.block, (window_width // 24, window_height // 24))
+        self.block = pygame.transform.scale(self.block, (BLOCK_SIZE, BLOCK_SIZE))
 
         self.length = length
         self.x = [BLOCK_SIZE] * self.length
         self.y = [BLOCK_SIZE] * self.length
 
-        self.direction = 'down'
+        self.direction = Directions.DOWN
 
     def update_length(self):
         self.length += 1
@@ -55,24 +54,24 @@ class Snake:
             self.x[i] = self.x[i-1]
             self.y[i] = self.y[i-1]
 
-        if self.direction == 'left':
+        if self.direction == Directions.LEFT:
             self.x[0] -= BLOCK_SIZE
             if self.x[0] < 0:
                 self.x[0] = WINDOW_WIDTH - BLOCK_SIZE
 
-        if self.direction == 'right':
+        if self.direction == Directions.RIGHT:
             self.x[0] += BLOCK_SIZE
-            if self.x[0] >= 600:
+            if self.x[0] >= WINDOW_WIDTH:
                 self.x[0] = 0
 
-        if self.direction == 'up':
+        if self.direction == Directions.UP:
             self.y[0] -= BLOCK_SIZE
             if self.y[0] < 0:
                 self.y[0] = WINDOW_HEIGHT - BLOCK_SIZE
 
-        if self.direction == 'down':
+        if self.direction == Directions.DOWN:
             self.y[0] += BLOCK_SIZE
-            if self.y[0] >= 600:
+            if self.y[0] >= WINDOW_HEIGHT:
                 self.y[0] = 0
 
         self.draw()
@@ -83,37 +82,36 @@ class Snake:
 
     def turn(self, direction):
 
-        if direction == 'left':
-            if self.direction != 'right':
-                self.direction = 'left'
+        if direction == Directions.LEFT:
+            if self.direction != Directions.RIGHT:
+                self.direction = Directions.LEFT
 
-        if direction == 'right':
-            if self.direction != 'left':
-                self.direction = 'right'
+        elif direction == Directions.RIGHT:
+            if self.direction != Directions.LEFT:
+                self.direction = Directions.RIGHT
 
-        if direction == 'up':
-            if self.direction != 'down':
-                self.direction = 'up'
+        elif direction == Directions.UP:
+            if self.direction != Directions.DOWN:
+                self.direction = Directions.UP
 
-        if direction == 'down':
-            if self.direction != 'up':
-                self.direction = 'down'
+        elif direction == Directions.DOWN:
+            if self.direction != Directions.UP:
+                self.direction = Directions.DOWN
 
 
 class Game:
-    def __init__(self, window_width=WINDOW_WIDTH, window_height=WINDOW_HEIGHT, block_image="images/block.jpg"):
+    def __init__(self, block_image=DEFAULT_SNAKE_BLOCK_PATH):
         pygame.init()
-        pygame.display.set_caption('AI Snake')
-
+        pygame.display.set_caption(GAME_NAME)
         pygame.mixer.init()
 
-        self.surface = pygame.display.set_mode((window_width, window_height))
-        self.snake = Snake(self.surface, window_width, window_height, block_image, length=1)
+        self.surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+        self.snake = Snake(self.surface, block_image, length=1)
         self.snake.draw()
         self.apple = Apple(self.surface)
         self.apple.draw()
 
-        with open('data/highest_score.txt', 'w+') as f:
+        with open(DATA_FILE_PATH, 'w+') as f:
             f.write(str(self.snake.length))
 
     @staticmethod
@@ -121,9 +119,9 @@ class Game:
         return x2 <= x1 < x2 + BLOCK_SIZE and y2 <= y1 < y2 + BLOCK_SIZE
 
     def render_background(self):
-        bg = pygame.image.load("images/yellow_background.jpg")
+        bg = pygame.image.load(BACKGROUND_IMAGE_PATH)
         bg = pygame.transform.scale(bg, (WINDOW_WIDTH, WINDOW_HEIGHT))
-        self.surface.blit(bg, (0, 0))
+        self.surface.blit(bg, LEFT_CORNER_COORDINATES)
 
     def play_sound(self, sound):
         sound = pygame.mixer.Sound(f"sounds/{sound}.mp3")
@@ -136,7 +134,6 @@ class Game:
         self.display_score()
         pygame.display.update()
 
-        #print(f'SNAKE ({self.snake.x[0]}, {self.snake.y[0]}), APPLE ({self.apple.x}, {self.apple.y})')
 
         # snake finds apple
         if self.is_collision(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
@@ -167,7 +164,7 @@ class Game:
         pygame.display.update()
 
     def reset(self):
-        self.snake = Snake(self.surface, WINDOW_WIDTH, WINDOW_HEIGHT, block_image='images/block.jpg', length=1)
+        self.snake = Snake(self.surface, block_image=DEFAULT_SNAKE_BLOCK_PATH, length=1)
         self.apple = Apple(self.surface)
 
     def run(self):
@@ -187,16 +184,16 @@ class Game:
 
                     if not paused:
                         if event.key == K_UP:
-                            self.snake.turn('up')
+                            self.snake.turn(Directions.UP)
 
                         if event.key == K_DOWN:
-                            self.snake.turn('down')
+                            self.snake.turn(Directions.DOWN)
 
                         if event.key == K_LEFT:
-                            self.snake.turn('left')
+                            self.snake.turn(Directions.LEFT)
 
                         if event.key == K_RIGHT:
-                            self.snake.turn('right')
+                            self.snake.turn(Directions.RIGHT)
 
 
                 elif event.type == QUIT:
@@ -208,13 +205,13 @@ class Game:
 
             except ValueError as e:
 
-                with open('data/highest_score.txt', 'r') as f:
+                with open(DATA_FILE_PATH, 'r') as f:
                     x = f.read().split()
                     current_highest_score = int(x[0])
 
                 if current_highest_score < self.snake.length:
                     current_highest_score = self.snake.length
-                    with open('data/highest_score.txt', 'w') as f:
+                    with open(DATA_FILE_PATH, 'w') as f:
                         f.truncate(0)
                         f.write(str(current_highest_score))
 
@@ -224,7 +221,7 @@ class Game:
                 paused = True
                 self.reset()
 
-            time.sleep(1/FPS)
+            time.sleep(1 / FPS)
 
 
 if __name__ == "__main__":
