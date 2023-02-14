@@ -10,6 +10,7 @@ APPLE_IMAGES = ['images\gem.png', 'images\gem2.png']
 BLOCK_SIZE = 25
 DEFAULT_SNAKE_BLOCK_PATH = "images/block.jpg"
 INIT_LENGTH = 1
+EMPTY_POSITION = -1
 
 # WINDOW
 WINDOW_WIDTH = 24 * BLOCK_SIZE
@@ -22,6 +23,10 @@ GAME_NAME = 'AI Snake'
 BACKGROUND_IMAGE_PATH = "images/yellow_background.jpg"
 DATA_FILE_PATH = 'data/highest_score.txt'
 LEFT_CORNER_COORDINATES = (0, 0)
+
+DING_SOUND_FILENAME = "ding"
+CRASH_SOUND_FILENAME = "crash"
+BLACK = (0, 0, 0)
 
 # DIRECTIONS
 class Directions(Enum):
